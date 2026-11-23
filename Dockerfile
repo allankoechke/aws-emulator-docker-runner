@@ -1,12 +1,18 @@
 
 FROM public.ecr.aws/amazonlinux/amazonlinux:2023-minimal
 
-# aws-emulator-aarch64.rpm
-# aws-emulator-x86_64.rpm
+ARG TARGETARCH
+ARG AWS_EMULATOR_ARCH=${TARGETARCH}
 
-ADD https://downloads.aws.com/aws-emulator/packages/aws-emulator/LTS/latest/aws-emulator-aarch64.rpm /tmp/aws-emulator.rpm
-
-RUN rpm -i /tmp/aws-emulator.rpm \
+RUN case "${AWS_EMULATOR_ARCH}" in \
+      amd64|x86_64) rpm_arch=x86_64 ;; \
+      arm64|aarch64) rpm_arch=aarch64 ;; \
+      *) echo "Unsupported AWS_EMULATOR_ARCH: ${AWS_EMULATOR_ARCH}" >&2; exit 1 ;; \
+    esac \
+    && curl --fail --location --silent --show-error \
+      "https://downloads.aws.com/aws-emulator/packages/aws-emulator/LTS/latest/aws-emulator-${rpm_arch}.rpm" \
+      --output /tmp/aws-emulator.rpm \
+    && rpm -i /tmp/aws-emulator.rpm \
     && rm /tmp/aws-emulator.rpm \
     && mkdir -p /home/emulator \
     && chown 1000:1000 /home/emulator

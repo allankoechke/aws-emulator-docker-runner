@@ -4,6 +4,8 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
+      args:
+        - AWS_EMULATOR_ARCH
     image: aws-emulator:local
     container_name: aws-emulator
     restart: unless-stopped
